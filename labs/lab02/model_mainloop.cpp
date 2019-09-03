@@ -1,3 +1,7 @@
+/*
+ Aluno: Marcelo Martimiano Junior RA: 156531
+*/
+
 #include <iostream>
 #include <chrono>
 #include <thread>
@@ -13,11 +17,11 @@ uint64_t get_now_ms() {
 
 int main ()
 {
-  // massa, velocidade, posicao, const_elastica
-  Corpo *c1 = new Corpo(1, 0, 15, 10);
-  Corpo *c2 = new Corpo(1, 0, 19, 10);
-  Corpo *c3 = new Corpo(1, 0, 17, 10);
-  Corpo *c4 = new Corpo(1, 0, 15, 10);
+  // massa, velocidade, posicao, const_elastica, const_amortecimento
+  Corpo *c1 = new Corpo(1, 0, 100, 10, 0.8);
+  Corpo *c2 = new Corpo(1, 0, 100, 10, 1);
+  Corpo *c3 = new Corpo(1, 0, 100, 10, 1.5);
+  Corpo *c4 = new Corpo(1, 0, 100, 10, 2);
 
   ListaDeCorpos *l = new ListaDeCorpos();
   l->add_corpo(c1);
@@ -27,7 +31,7 @@ int main ()
 
   Fisica *f = new Fisica(l);
 
-  Tela *tela = new Tela(l, 100, 100, 100, 100);
+  Tela *tela = new Tela(l, 20, 100, 100, 100);
   tela->init();
 
   uint64_t t0;
@@ -52,7 +56,7 @@ int main ()
     tela->update();
 
     // Condicao de parada
-    if ( (t1-T) > 20000 ) break;
+    if ( (t1-T) > 22000 ) break;
 
     std::this_thread::sleep_for (std::chrono::milliseconds(100));
 

@@ -1,3 +1,6 @@
+/*
+ Aluno: Marcelo Martimiano Junior RA: 156531
+*/
 #include <vector>
 
 #include "oo_model.hpp"
@@ -6,13 +9,13 @@
 #include <iostream>
 
 
-Corpo::Corpo(float massa, float velocidade, float posicao, float const_elastica) {
+Corpo::Corpo(float massa, float velocidade, float posicao, float const_elastica, float const_amortecimento) {
   this->massa = massa;
   this->velocidade = velocidade;
   this->posicao = posicao;
   this->const_elastica = const_elastica;
   this->pos_neutra = 50;
-  this->const_amortecimento = 1;
+  this->const_amortecimento = const_amortecimento;
 }
 
 void Corpo::update(float nova_velocidade, float nova_posicao) {
@@ -55,7 +58,8 @@ void ListaDeCorpos::hard_copy(ListaDeCorpos *ldc) {
     Corpo *c = new Corpo( (*corpos)[k]->get_massa(),\
                           (*corpos)[k]->get_posicao(),\
                           (*corpos)[k]->get_velocidade(),\
-                          (*corpos)[k]->get_const_elastica()
+                          (*corpos)[k]->get_const_elastica(),\
+                          (*corpos)[k]->get_const_amortecimento()
                         );
     this->add_corpo(c);
   }
@@ -79,6 +83,7 @@ void Fisica::update(float deltaT) {
 
   // converte deltaT para segundos
   deltaT /= 1000;
+
   // Atualiza parametros dos corpos!
   std::vector<Corpo *> *c = this->lista->get_corpos();
   for (int i = 0; i < (*c).size(); i++) {
@@ -91,18 +96,11 @@ void Fisica::update(float deltaT) {
     float beta = (-(*c)[i]->get_const_amortecimento() / (*c)[i]->get_massa());
 
     float delta_vel = deltaT * (alfa * (pos_anterior - pos_neutra) + beta * vel_anterior);
+
     float new_vel   = vel_anterior + delta_vel;
+
     // A nova posição é aproximada pela velocidade média no intervalo de tempo deltaT
     float new_pos   = pos_anterior + 0.5 * (vel_anterior + new_vel) * deltaT;
-
-    //float new_vel = (*c)[i]->get_velocidade() + (float)deltaT * (-10.0)/1000;
-    //float new_pos = (*c)[i]->get_posicao() + (float)deltaT * new_vel/1000;
-    // Limite da mola
-    if (new_pos > 20) {
-      //new_pos = 20;
-      //new_vel *= -1;
-    }
-    //std::cout << new_pos << " vel: " << new_vel << "   delta_vel:" << delta_vel <<"   Fel:" << alfa * (pos_anterior - pos_neutra) << "\n";
 
     (*c)[i]->update(new_vel, new_pos);
   }
@@ -123,57 +121,60 @@ void Tela::init() {
 	raw();				         /* Line buffering disabled	*/
   curs_set(0);           /* Do not display cursor */
 }
-
-void Tela::update() {
-  int j;
-
-  std::vector<Corpo *> *corpos_old = this->lista_anterior->get_corpos();
-
-  // Apaga corpos na tela
-  for (int k=0; k<corpos_old->size(); k++)
-  {
-    j = (int) ((*corpos_old)[k]->get_posicao()) * \
-        (this->maxJ / this->maxY);
-    move(k, j);   /* Move cursor to position */
-    echochar(' ');  /* Prints character, advances a position */
+void Tela::write(int i, int j, char character) {
+  if (i < 0 || i > this->maxI) {
+    return;
   }
+  if (j < 0 || j > this->maxJ) {
+    return;
+  }
+  move(i, j);
+  echochar(character);
+
+}
+void Tela::update() {
+  int j, pos_corpo;
 
   // Desenha corpos na tela
   std::vector<Corpo *> *corpos = this->lista->get_corpos();
 
-  for (int k=0; k<corpos->size(); k++)
-  {
-    j = (int) ((*corpos)[k]->get_posicao()) * \
-        (this->maxJ / this->maxY);
-    move(k, j);   /* Move cursor to position */
-    echochar('*');  /* Prints character, advances a position */
 
-    // Atualiza corpos antigos
-    (*corpos_old)[k]->update(  (*corpos)[k]->get_velocidade(),\
-                               (*corpos)[k]->get_posicao());
+  for (int k=0; k < corpos->size(); k++)
+  {
+
+    // Encontra a posição do corpo
+    pos_corpo = (int) ((*corpos)[k]->get_posicao()) * \
+        (this->maxJ / this->maxY);
+
+    // Desenha a mola até chegar na posição encontrada
+    for (j = 0; j < pos_corpo - 1; j++){
+      this->write(k, j, '~');
+    }
+    // Desenha uma "caixa", representando o corpo preso a uma mola
+    this->write(k, j++, '|');
+    this->write(k, j++, '_');
+    this->write(k, j++, '|');
+
+    // Limpa o restante da tela
+    for (; j < this->maxJ; j++){
+      this->write(k, j, ' ');
+    }
   }
 
-  /*Todo: apagar
-  move(0, this->maxJ - 4);
-  echochar('T');
-  echochar('E');
-  echochar('T');
-  echochar('O');
+  // Desenha uma borda, demarcando os limites da tela
+  move(this->maxI, 0);
+  for (int j = 0; j <= this->maxJ; j++) {
+  echochar('=');
+  }
 
+  for (int i = 0; i < this->maxI; i++) {
+    move(i, this->maxJ);
+    echochar('|');
+  }
 
-  move(this->maxI - 1, this->maxJ - 4);
-  echochar('C');
-  echochar('H');
-  echochar('A');
-  echochar('O');
-
-  move(0, this->maxJ); echochar('Y');
-  for (int j = 0; j < this-> maxJ; j++) {
-    move(this->maxI, j);
-    echochar('=');
-  }*/
-  int pos = (int) ((*corpos)[0]->get_posicao_neutra()) * (this->maxI / this->maxX);
-  move(3, pos); echochar('-');
+  // Destaca a posição de equilíbrio das molas
+  int pos = (int) ((*corpos)[0]->get_posicao_neutra()) * (this->maxJ / this->maxY);
+  move(corpos->size(), pos); echochar('|');
 
   // Atualiza tela
   refresh();

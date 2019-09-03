@@ -1,4 +1,6 @@
-
+/*
+ Aluno: Marcelo Martimiano Junior RA: 156531
+*/
 #ifndef OO_MODEL_HPP
 #define OO_MODEL_HPP
 
@@ -12,7 +14,7 @@ class Corpo {
   float const_amortecimento;
 
   public:
-  Corpo(float massa, float velocidade, float posicao, float const_elastica);
+  Corpo(float massa, float velocidade, float posicao, float const_elastica, float const_amortecimento);
   void update(float nova_velocidade, float nova_posicao);
   float get_massa();
   float get_velocidade();
@@ -48,6 +50,7 @@ class Tela {
     ListaDeCorpos *lista, *lista_anterior;
     int maxI, maxJ;
     float maxX, maxY;
+    void write(int i, int j, char character);
 
   public:
     Tela(ListaDeCorpos *ldc, int maxI, int maxJ, float maxX, float maxY);
@@ -56,7 +59,5 @@ class Tela {
     void init();
     void update();
 };
-
-
 
 #endif
