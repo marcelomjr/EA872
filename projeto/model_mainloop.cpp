@@ -9,14 +9,70 @@
 #include <unistd.h>
 
 #include "oo_model.hpp"
+#include "01-playback.hpp"
 
 using namespace std::chrono;
 uint64_t get_now_ms() {
   return duration_cast<milliseconds>(steady_clock::now().time_since_epoch()).count();
 }
 
+void delay(uint64_t ms) {
+  uint64_t t0;
+  uint64_t t1;
+  
+  while (1) {
+   std::this_thread::sleep_for (std::chrono::milliseconds(1));
+   t1 = get_now_ms();
+   if (t1-t0 > ms) break;
+  }
+}
+
 int main ()
 {
+  uint64_t t0;
+  uint64_t t1;
+  uint64_t deltaT;
+  uint64_t T = get_now_ms();
+
+  Audio::Sample *asample;
+  asample = new Audio::Sample();
+  asample->load("assets/blip.dat");
+
+  Audio::Player *player;
+  player = new Audio::Player();
+  player->init();	
+  
+  while (1) {
+    std::this_thread::sleep_for (std::chrono::milliseconds(1));
+    t1 = get_now_ms();
+    if (t1-t0 > 500) break;
+  }
+
+  std::cout << "Audio initialized!\n"; 
+  
+  player->play(asample);
+
+  t0 = get_now_ms();
+  while (1) {
+    std::this_thread::sleep_for (std::chrono::milliseconds(1));
+    t1 = get_now_ms();
+
+    if (t1-t0 > 500) break;
+  }
+
+  asample->set_position(0);
+
+  t0 = get_now_ms();
+  while (1) {
+    std::this_thread::sleep_for (std::chrono::milliseconds(1));
+    t1 = get_now_ms();
+
+    if (t1-t0 > 500) break;
+  }
+
+
+  player->stop();
+	
   // massa, velocidade, posicao, const_elastica, const_amortecimento
   Corpo *c1 = new Corpo(1, 0, 180, 4, 0.8);
   Corpo *c2 = new Corpo(1, 0, 180, 4, 1.0);
@@ -32,19 +88,11 @@ int main ()
   Fisica *f = new Fisica(l);
 
   Tela *tela = new Tela(l, 20, 100, 200, 200);
-  tela->init();
+  //tela->init();
   
   Teclado *teclado = new Teclado();
   teclado->init();
 
-  uint64_t t0;
-  uint64_t t1;
-  uint64_t deltaT;
-  uint64_t T;
-
-  int i = 0;
-
-  T = get_now_ms();
   t1 = T;
   while (1) {
     // Atualiza timers
@@ -72,7 +120,6 @@ int main ()
 
     std::this_thread::sleep_for (std::chrono::milliseconds(100));
 
-    i++;
   }
   tela->stop();
   return 0;
