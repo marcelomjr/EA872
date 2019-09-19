@@ -52,6 +52,7 @@ int main ()
   uint64_t T = get_now_ms();
   pthread_t audio_thread;
 
+
   asample = new Audio::Sample();
   asample->load("assets/blip.dat");
 
@@ -61,9 +62,9 @@ int main ()
   while (1) {
     std::this_thread::sleep_for (std::chrono::milliseconds(1));
     t1 = get_now_ms();
-    if (t1-t0 > 1000) break;
+    if (t1-t0 > 500) break;
   }
-
+  pthread_create(&audio_thread, NULL, audio_thread_handler, NULL); 
   std::cout << "Audio initialized!\n";
   	
   // massa, velocidade, posicao, const_elastica, const_amortecimento
@@ -124,7 +125,9 @@ int main ()
 
   }
   tela->stop();
+
   pthread_join(audio_thread, NULL);
+  
   player->stop();
 
   
